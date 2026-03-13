@@ -82,17 +82,17 @@ app.post('/login', async (req, res) => {
     });
 });
 
-app.get('/dashboard', (req, res) => {
-    if (!req.session.userId) return res.redirect('/login');
-    // Pass the username to the template
-    res.render('dashboard', { username: req.session.username });
-});
-
+// Logout Logic
 app.post('/logout', (req, res) => {
     req.session.destroy(() => {
         res.clearCookie('connect.sid');
         res.redirect('/login');
     });
+});
+
+app.get('/dashboard', (req, res) => {
+    if (!req.session.userId) return res.redirect('/login');
+    res.render('dashboard', { username: req.session.username });
 });
 
 app.get('{/*path}', (req, res) => {
