@@ -3,11 +3,19 @@ const bcrypt = require('bcrypt');
 const session = require('express-session');
 const bodyParser = require('body-parser');
 const sqlite3 = require('sqlite3').verbose();
+const app = express();
 require('dotenv').config();
 
-const app = express();
+app.set('view engine', 'ejs');
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(session({
+    secret: process.env.SECRET,
+    resave: false,
+    saveUninitialized: true
+}));
 
-// 2. Setup Database Connection
+
+// Database
 const db = new sqlite3.Database('./database.sqlite', (err) => {
     if (err) console.error('Database opening error:', err);
     console.log('Connected to SQLite database.');
@@ -20,13 +28,6 @@ db.run(`CREATE TABLE IF NOT EXISTS users (
     password TEXT
 )`);
 
-app.set('view engine', 'ejs');
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(session({
-    secret: process.env.SECRET,
-    resave: false,
-    saveUninitialized: true
-}));
 
 // Routes
 app.get('/signup', (req, res) => res.render('signup'));
@@ -35,6 +36,11 @@ app.get('/login', (req, res) => res.render('login'));
 // Signup Logic
 app.post('/signup', async (req, res) => {
     try {
+        // Prevent short passwords
+        if (req.body.password.length <~ 8){
+            return res.status(400).send("Password is too short to use.");
+        }
+
         const hashedPassword = await bcrypt.hash(req.body.password, 12);
         const { username } = req.body;
 
@@ -65,7 +71,7 @@ app.post('/login', async (req, res) => {
         try {
             if (await bcrypt.compare(password, user.password)) {
                 req.session.userId = user.id;
-                req.session.username = user.username; // Save username for dashboard
+                req.session.username = user.username;
                 res.redirect('/dashboard');
             } else {
                 res.send('Invalid password');
