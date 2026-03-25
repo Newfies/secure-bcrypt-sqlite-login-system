@@ -10,3 +10,6 @@
 ```
     run.bat
 ```
+
+# Notice
+this does contain AI generated content but is actually mainly a reference on my old creation **expressjs-databases-hashed**
